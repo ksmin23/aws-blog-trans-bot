@@ -1,0 +1,9 @@
+{
+  "lib_bucket_name": "Your-S3-Bucket-Name-Of-Lib",
+  "email_from_address": "Your-Sender-Email-Addr",
+  "email_to_addresses": "Your-Receiver-Email-Addr-List",
+  "dry_run": "false",
+  "trans_dest_lang": "ko",
+  "event_schedule": "0 * * * *",
+  "blog_url": "https://aws.amazon.com/ko/blogs/aws/"
+}

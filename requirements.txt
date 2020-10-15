@@ -1,1 +1,22 @@
--e .
+aws-cdk.core==1.67.0
+aws-cdk.aws-ec2==1.67.0
+aws-cdk.aws-events==1.67.0
+aws-cdk.aws-events-targets==1.67.0
+aws-cdk.aws-elasticache==1.67.0
+aws-cdk.aws-iam==1.67.0
+aws-cdk.aws-lambda==1.67.0
+aws-cdk.aws-logs==1.67.0
+aws-cdk.aws-s3==1.67.0
+boto3==1.15.16
+botocore==1.18.16
+
+# packages for aws lambda layer
+# DO NOT REMOVE [[layers]] comment
+#[[layers]]
+arrow==0.17.0
+requests==2.24.0
+beautifulsoup4==4.9.3
+newspaper3k==0.2.8
+googletrans==3.0.0
+redis==3.3.11
+
