@@ -30,8 +30,23 @@ DRY_RUN = True if 'true' == os.getenv('DRY_RUN', 'true') else False
 AWS_REGION = os.getenv('REGION_NAME', 'us-east-1')
 AWS_SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN')
 
+S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
+S3_OBJ_KEY_PREFIX = os.getenv('S3_OBJ_KEY_PREFIX', 'posts')
+
 BLOG_URL = os.getenv('BLOG_URL', 'https://aws.amazon.com/ko/blogs/aws/')
 BLOG_CATEGORY = BLOG_URL.rstrip('/').split('/')[-1]
+
+
+def isfile_s3(s3_client, s3_bucket_name, s3_obj_key):
+  try:
+    res = s3_client.head_object(Bucket=s3_bucket_name, Key=s3_obj_key)
+    return True
+  except botocore.exceptions.ClientError as ex:
+    err_code, err_msg = ex.response['Error']['Code'], ex.response['Error']['Message']
+    if (err_code, err_msg) == ('404', 'Not Found'):
+      return False
+    else:
+      raise ex
 
 
 def send_sns(client, topic, subject, message):
@@ -55,11 +70,17 @@ def lambda_handler(event, context):
   soup = BeautifulSoup(html, 'html.parser')
   footers = soup.find_all('footer', class_='blog-post-meta')
 
-  BASIC_DATE = arrow.get(event['time']).shift(days=-1).ceil('day')
+  BASIC_DATE = arrow.get(event['time']).shift(days=-3).ceil('day')
 
   post_list = [get_meta_data(elem) for elem in footers]
-  #print('\n'.join([json.dumps(e) for e in post_list]))
-  new_post_list = [e for e in post_list if arrow.get(e['pub_date']) >= BASIC_DATE]
+  cand_post_list = [e for e in post_list if arrow.get(e['pub_date']) >= BASIC_DATE]
+
+  new_post_list = []
+  for elem in cand_post_list:
+    s3_obj_key = '{}/{}-{}.html'.format(S3_OBJ_KEY_PREFIX,
+      arrow.get(elem['pub_date']).format('YYYYMMDD'), elem['id'])
+    if not isfile_s3(s3_client, S3_BUCKET_NAME, s3_obj_key):
+      new_post_list.append(elem)
 
   sns_client = boto3.client('sns', region_name=AWS_REGION)
   for elem in new_post_list:
