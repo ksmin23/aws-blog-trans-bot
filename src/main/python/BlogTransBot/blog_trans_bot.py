@@ -188,17 +188,15 @@ def lambda_handler(event, context):
       'body_trans': trans_body_texts,
       'tags': tag
     }
-
     html = gen_html(doc)
+
+    subject = '''[translated] {title}'''.format(title=doc['title'])
+    send_email(ses_client, EMAIL_FROM_ADDRESS, EMAIL_TO_ADDRESSES, subject, html)
 
     s3_obj_key = '{}/{}-{}.html'.format(S3_OBJ_KEY_PREFIX,
       arrow.get(published_time).format('YYYYMMDD'), doc['doc_id'])
     fwrite_s3(s3_client, html, S3_BUCKET_NAME, s3_obj_key) 
 
-    from_addr = EMAIL_FROM_ADDRESS
-    to_addrs = EMAIL_TO_ADDRESSES
-    subject = '''[translated] {title}'''.format(title=doc['title'])
-    send_email(ses_client, from_addr, to_addrs, subject, html)
 
 
 if __name__ == '__main__':
