@@ -55,11 +55,12 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
       "blog_url": "https://aws.amazon.com/ko/blogs/aws/"
     }
     ```
-    `email_from_address`은 [Amazon SES에서 이메일 주소 확인](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-email-addresses.html)를 참고해서 반드시 사용 가능한 email 주소인지 확인한다. (배포 전에 한번만 확인 하면 된다.)
+    - `email_from_address`은 [Amazon SES에서 이메일 주소 확인](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-email-addresses.html)를 참고해서 반드시 사용 가능한 email 주소인지 확인한다. (배포 전에 한번만 확인 하면 된다.)
     예를 들어, `sender@amazon.com`라는 email 주소를 확인하려면 다음과 같이 한다.
-    ```
-    aws ses verify-email-identity --email-address sender@amazon.com
-    ```
+      ```
+      aws ses verify-email-identity --email-address sender@amazon.com
+      ```
+    - AWS Blog 중 다른 카테고리의 블로그 포스트를 번역하고 싶은 경우, `blog_url`을 다른 url로 교체하면 된다.
 
 5. `cdk deploy` 명령어를 이용해서 배포한다.
     ```shell script
@@ -93,3 +94,43 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
 
 4. **Test** 버튼을 클릭해서 람다 함수를 실행한다.
 ![lambda-run-test](./assets/lambda-run-test.png)
+
+## AWS Blog Links
+
+| Category | Link |
+|------|---|---|
+|  Architecture | https://aws.amazon.com/blogs/architecture/ |
+|  AWS Cost Management | https://aws.amazon.com/blogs/aws-cost-management/ |
+|  AWS Partner Network | https://aws.amazon.com/blogs/apn/ |
+|  AWS Podcast | https://aws.amazon.com/podcasts/aws-podcast/?sc_ichannel=ha&sc_icampaign=acq_awsblognav&sc_icontent=categorynav |
+|  AWS Marketplace | https://aws.amazon.com/blogs/awsmarketplace/ |
+|  AWS News | https://aws.amazon.com/blogs/aws/ |
+|  Big Data | https://aws.amazon.com/blogs/big-data/ |
+|  Business Productivity | https://aws.amazon.com/blogs/business-productivity/ |
+|  Compute | https://aws.amazon.com/blogs/compute/ |
+|  Contact Center | https://aws.amazon.com/blogs/contact-center/ |
+|  Containers | https://aws.amazon.com/blogs/containers/ |
+|  Database | https://aws.amazon.com/blogs/database/ |
+|  Desktop & Application Streaming | https://aws.amazon.com/blogs/desktop-and-application-streaming/ |
+|  Developer | https://aws.amazon.com/blogs/developer/ |
+|  DevOps | https://aws.amazon.com/blogs/devops/ |
+|  Enterprise Strategy | https://aws.amazon.com/blogs/enterprise-strategy/ |
+|  Front-End Web & Mobile | https://aws.amazon.com/blogs/mobile/ |
+|  Game Tech | https://aws.amazon.com/blogs/gametech/ |
+|  Infrastructure & Automation | https://aws.amazon.com/blogs/infrastructure-and-automation/ |
+|  Industries | https://aws.amazon.com/blogs/industries/ |
+|  Internet of Things | https://aws.amazon.com/blogs/iot/ |
+|  Machine Learning | https://aws.amazon.com/blogs/machine-learning/ |
+|  Management & Governance | https://aws.amazon.com/blogs/mt/ |
+|  Media | https://aws.amazon.com/blogs/media/ |
+|  Messaging & Targeting | https://aws.amazon.com/blogs/messaging-and-targeting/ |
+|  Modernizing with AWS | https://aws.amazon.com/blogs/modernizing-with-aws/ |
+|  Networking & Content Delivery | https://aws.amazon.com/blogs/networking-and-content-delivery/ |
+|  Open Source | https://aws.amazon.com/blogs/opensource/ |
+|  Public Sector | https://aws.amazon.com/blogs/publicsector/ |
+|  Robotics | https://aws.amazon.com/blogs/robotics/ |
+|  SAP | https://aws.amazon.com/blogs/awsforsap/ |
+|  Security, Identity, & Compliance | https://aws.amazon.com/blogs/security/ |
+|  Startups | https://aws.amazon.com/blogs/startups/ |
+|  Storage | https://aws.amazon.com/blogs/storage/ |
+|  Training & Certification | https://aws.amazon.com/blogs/training-and-certification/ |
