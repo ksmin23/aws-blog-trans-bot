@@ -1,10 +1,12 @@
 # RSS Feed Translation Bot
 
-영문 [AWS의 최신 블로그 포스팅](https://aws.amazon.com/ko/blogs/aws/)을 한국어로 기계 번역해서 영문과 한국어 번역 내용(아래 그림 참조)을 email로 전송해주는 프로젝트.<br/>
+영문 [AWS의 최신 블로그 포스팅](https://aws.amazon.com/ko/blogs/aws/)을 한국어로 기계 번역해서 한국어 번역 내용(아래 그림 참조)을 email로 전송해주는 프로젝트.<br/>
 
   **Figure 1.** 영문 AWS의 최신 블로그 포스팅을 한국어로 번역한 결과
+  ![sample-blog-post-translated](./assets/sample-blog-post-translated.png)
 
 ## Architecture
+ ![aws-blog-trans-bot-arch](./assets/aws-blog-trans-bot-arch.svg)
 
 ## Deployment
 
@@ -53,6 +55,10 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
     }
     ```
     `email_from_address`은 [Amazon SES에서 이메일 주소 확인](https://docs.aws.amazon.com/ses/latest/DeveloperGuide/verify-email-addresses.html)를 참고해서 반드시 사용 가능한 email 주소인지 확인한다. (배포 전에 한번만 확인 하면 된다.)
+    예를 들어, `sender@amazon.com`라는 email 주소를 확인하려면 다음과 같이 한다.
+    ```
+    aws ses verify-email-identity --email-address sender@amazon.com
+    ```
 
 5. `cdk deploy` 명령어를 이용해서 배포한다.
     ```shell script
@@ -64,7 +70,7 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
     (.env) $ cdk --profile=cdk_user destroy
     ```
 
-## Useful commands
+### Useful commands
 
  * `cdk ls`          list all stacks in the app
  * `cdk synth`       emits the synthesized CloudFormation template
@@ -72,3 +78,15 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
  * `cdk diff`        compare deployed stack with current state
  * `cdk docs`        open CDK documentation
 
+## Test
+1. AWS 웹 콘솔에서 Lambda 서비스를 선택한 후, BlogRssReader 람다 함수를 선택 한다.
+
+2. **Configure test events**를 선택한다.
+![lambda-configure-test-events](./assets/lambda-configure-test-events.png)
+
+3. **Cloud Watch Scheduled Event**를 생성후 저장한다.<br/>
+(이 예제에서는 `TestScheduledEvent` 라는 이름을 사용한다.)
+![lambda-test-scheduled-event](./assets/lambda-test-scheduled-event.png)
+
+4. **Test** 버튼을 클릭해서 람다 함수를 실행한다.
+![lambda-run-test](./assets/lambda-run-test.png)
