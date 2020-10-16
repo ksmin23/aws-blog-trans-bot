@@ -40,48 +40,6 @@ class AwsBlogTransBotStack(core.Stack):
       abort_incomplete_multipart_upload_after=core.Duration.days(3),
       expiration=core.Duration.days(7))
 
-#    sg_use_elasticache = aws_ec2.SecurityGroup(self, 'BlogTransBotCacheClientSG',
-#      vpc=vpc,
-#      allow_all_outbound=True,
-#      description='security group for redis client used blog post trans bot',
-#      security_group_name='use-blog-trans-bot-redis'
-#    )
-#    core.Tags.of(sg_use_elasticache).add('Name', 'use-blog-trans-bot-redis')
-#
-#    sg_elasticache = aws_ec2.SecurityGroup(self, 'BlogTransBotCacheSG',
-#      vpc=vpc,
-#      allow_all_outbound=True,
-#      description='security group for redis used blog post trans bot',
-#      security_group_name='blog-trans-bot-redis'
-#    )
-#    core.Tags.of(sg_elasticache).add('Name', 'blog-trans-bot-redis')
-#
-#    sg_elasticache.add_ingress_rule(peer=sg_use_elasticache, connection=aws_ec2.Port.tcp(6379), description='use-blog-trans-bot-redis')
-#
-#    elasticache_subnet_group = aws_elasticache.CfnSubnetGroup(self, 'BlogTransBotCacheSubnetGroup',
-#      description='subnet group for blog-trans-bot-redis',
-#      subnet_ids=vpc.select_subnets(subnet_type=aws_ec2.SubnetType.PRIVATE).subnet_ids,
-#      cache_subnet_group_name='blog-trans-bot-redis'
-#    )
-#
-#    translated_feed_cache = aws_elasticache.CfnCacheCluster(self, 'BlogTransBotCache',
-#      cache_node_type='cache.t3.small',
-#      num_cache_nodes=1,
-#      engine='redis',
-#      engine_version='5.0.5',
-#      auto_minor_version_upgrade=False,
-#      cluster_name='blog-trans-bot-redis',
-#      snapshot_retention_limit=3,
-#      snapshot_window='17:00-19:00',
-#      preferred_maintenance_window='mon:19:00-mon:20:30',
-#      cache_subnet_group_name=elasticache_subnet_group.cache_subnet_group_name,
-#      vpc_security_group_ids=[sg_elasticache.security_group_id]
-#    )
-#
-#    #XXX: If you're going to launch your cluster in an Amazon VPC, you need to create a subnet group before you start creating a cluster.
-#    # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-elasticache-cache-cluster.html#cfn-elasticache-cachecluster-cachesubnetgroupname
-#    translated_feed_cache.add_depends_on(elasticache_subnet_group)
-
     sg_rss_feed_trans_bot = aws_ec2.SecurityGroup(self, 'BlogTransBotSG',
       vpc=vpc,
       allow_all_outbound=True,
@@ -97,7 +55,7 @@ class AwsBlogTransBotStack(core.Stack):
 
     lambda_lib_layer = _lambda.LayerVersion(self, "BlogTransBotLib",
       layer_version_name="blog_trans_bot-lib",
-      compatible_runtimes=[_lambda.Runtime.PYTHON_3_7],
+      compatible_runtimes=[_lambda.Runtime.PYTHON_3_6],
       code=_lambda.Code.from_bucket(s3_lib_bucket, "var/blog_trans_bot-lib.zip")
     )
 
@@ -117,7 +75,7 @@ class AwsBlogTransBotStack(core.Stack):
 
     #XXX: Deploy lambda in VPC - https://github.com/aws/aws-cdk/issues/1342
     blog_rss_reader_lambda_fn = _lambda.Function(self, 'BlogRssReader',
-      runtime=_lambda.Runtime.PYTHON_3_7,
+      runtime=_lambda.Runtime.PYTHON_3_6,
       function_name='BlogRssReader',
       handler='blog_rss_reader.lambda_handler',
       description='Crawl blog rss feed',
@@ -128,6 +86,23 @@ class AwsBlogTransBotStack(core.Stack):
       security_groups=[sg_rss_feed_trans_bot],
       vpc=vpc
     )
+
+    blog_rss_reader_lambda_fn.add_to_role_policy(aws_iam.PolicyStatement(**{
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": [s3_bucket.bucket_arn, "{}/*".format(s3_bucket.bucket_arn)],
+      "actions": ["s3:AbortMultipartUpload",
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutObject"]
+    }))
+
+    blog_rss_reader_lambda_fn.add_to_role_policy(aws_iam.PolicyStatement(**{
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": [sns_topic.topic_arn],
+      "actions": ["sns:Publish"]
+    }))
 
     # See https://docs.aws.amazon.com/lambda/latest/dg/tutorial-scheduled-events-schedule-expressions.html
     event_schedule = dict(zip(['minute', 'hour', 'month', 'week_day', 'year'],
@@ -153,9 +128,11 @@ class AwsBlogTransBotStack(core.Stack):
       'DRY_RUN': self.node.try_get_context('dry_run')
     }
 
+    #XXX: use python3.6 runtime becasue AWS Lamda: cannot import name '_imaging' from 'PIL'
+    # https://stackoverflow.com/questions/57197283/aws-lamda-cannot-import-name-imaging-from-pil
     #XXX: Deploy lambda in VPC - https://github.com/aws/aws-cdk/issues/1342
     blog_trans_bot_lambda_fn = _lambda.Function(self, 'BlogTransBot',
-      runtime=_lambda.Runtime.PYTHON_3_7,
+      runtime=_lambda.Runtime.PYTHON_3_6,
       function_name='BlogTransBot',
       handler='blog_trans_bot.lambda_handler',
       description='Translate blog post',
@@ -176,6 +153,12 @@ class AwsBlogTransBotStack(core.Stack):
         "s3:ListBucket",
         "s3:ListBucketMultipartUploads",
         "s3:PutObject"]
+    }))
+
+    blog_trans_bot_lambda_fn.add_to_role_policy(aws_iam.PolicyStatement(**{
+      "effect": aws_iam.Effect.ALLOW,
+      "resources": ["*"],
+      "actions": ["ses:SendEmail"]
     }))
 
     log_group = aws_logs.LogGroup(self, 'BlogTransBotLogGroup',

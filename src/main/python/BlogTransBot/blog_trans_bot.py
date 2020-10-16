@@ -27,11 +27,11 @@ DRY_RUN = True if 'true' == os.getenv('DRY_RUN', 'true') else False
 
 AWS_REGION = os.getenv('REGION_NAME', 'us-east-1')
 
-S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME', 'your-bucket-name')
+S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 S3_OBJ_KEY_PREFIX = os.getenv('S3_OBJ_KEY_PREFIX', 'posts')
 
-EMAIL_FROM_ADDRESS = os.getenv('EMAIL_FROM_ADDRESS', 'your-sender-email-addr')
-EMAIL_TO_ADDRESSES = os.getenv('EMAIL_TO_ADDRESSES', 'your-receiver-email-addr-list')
+EMAIL_FROM_ADDRESS = os.getenv('EMAIL_FROM_ADDRESS')
+EMAIL_TO_ADDRESSES = os.getenv('EMAIL_TO_ADDRESSES')
 EMAIL_TO_ADDRESSES = [e.strip() for e in EMAIL_TO_ADDRESSES.split(',')]
 
 TRANS_DEST_LANG = os.getenv('TRANS_DEST_LANG', 'ko')
@@ -147,11 +147,14 @@ def send_email(ses_client, from_addr, to_addrs, subject, html_body):
 
 
 def lambda_handler(event, context):
+  LOGGER.debug('receive SNS message')
+
   s3_client = boto3.client('s3', region_name=AWS_REGION)
   ses_client = boto3.client('ses', region_name=AWS_REGION)
 
   for record in event['Records']:
     msg = json.loads(record['Sns']['Message'])
+    LOGGER.debug('message: %s' % json.dumps(msg))
 
     doc_id = msg['id']
     url = msg['link']
@@ -196,7 +199,7 @@ def lambda_handler(event, context):
     s3_obj_key = '{}/{}-{}.html'.format(S3_OBJ_KEY_PREFIX,
       arrow.get(published_time).format('YYYYMMDD'), doc['doc_id'])
     fwrite_s3(s3_client, html, S3_BUCKET_NAME, s3_obj_key) 
-
+  LOGGER.debug('done')
 
 
 if __name__ == '__main__':
@@ -241,6 +244,7 @@ if __name__ == '__main__':
 
   test_sns_event['Records'][0]['Sns']['Subject'] = 'blog posts from {topic}'.format(topic='AWS')
   test_sns_event['Records'][0]['Sns']['Message'] = message
+  LOGGER.debug(json.dumps(test_sns_event))
 
   start_t = time.time()
   lambda_handler(test_sns_event, {})

@@ -9,8 +9,10 @@ import logging
 import os
 import json
 import hashlib
+import traceback
 
 import boto3
+import botocore
 from bs4 import BeautifulSoup
 import requests
 import arrow
@@ -50,7 +52,7 @@ def isfile_s3(s3_client, s3_bucket_name, s3_obj_key):
 
 
 def send_sns(client, topic, subject, message):
-  client.publish(TopicArn=topic, Subject=subject, Message=message)
+  return client.publish(TopicArn=topic, Subject=subject, Message=message)
 
 
 def get_meta_data(tag):
@@ -75,6 +77,7 @@ def lambda_handler(event, context):
   post_list = [get_meta_data(elem) for elem in footers]
   cand_post_list = [e for e in post_list if arrow.get(e['pub_date']) >= BASIC_DATE]
 
+  s3_client = boto3.client('s3', region_name=AWS_REGION)
   new_post_list = []
   for elem in cand_post_list:
     s3_obj_key = '{}/{}-{}.html'.format(S3_OBJ_KEY_PREFIX,
@@ -85,8 +88,12 @@ def lambda_handler(event, context):
   sns_client = boto3.client('sns', region_name=AWS_REGION)
   for elem in new_post_list:
     try:
-      send_sns(sns_client, AWS_SNS_TOPIC, BLOG_CATEGORY, json.dumps(elem))
+      if DRY_RUN:
+        print(json.dumps(elem))
+        continue
+      send_sns(sns_client, AWS_SNS_TOPIC_ARN, BLOG_CATEGORY, json.dumps(elem))
     except Exception as ex:
+      traceback.print_stack()
       counters['error'] += 1
 
   counters['total'] += len(post_list)
@@ -96,7 +103,7 @@ def lambda_handler(event, context):
 
 
 if __name__ == '__main__':
-  event = {
+  test_event = {
     "id": "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
     "detail-type": "Scheduled Event",
     "source": "aws.events",
@@ -108,10 +115,10 @@ if __name__ == '__main__':
     ],
     "detail": {}
   }
-  event['time'] = datetime.utcnow().strftime('%Y-%m-%dT%H:00:00')
+  test_event['time'] = datetime.utcnow().strftime('%Y-%m-%dT%H:00:00')
 
   start_t = time.time()
-  lambda_handler(event, {})
+  lambda_handler(test_event, {})
   end_t = time.time()
   LOGGER.info('run_time: {:.2f}'.format(end_t - start_t))
 
