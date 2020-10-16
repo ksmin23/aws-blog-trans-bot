@@ -3,6 +3,7 @@
 영문 [AWS의 최신 블로그 포스팅](https://aws.amazon.com/ko/blogs/aws/)을 한국어로 기계 번역해서 한국어 번역 내용(아래 그림 참조)을 email로 전송해주는 프로젝트.<br/>
 
   **Figure 1.** 영문 AWS의 최신 블로그 포스팅을 한국어로 번역한 결과
+
   ![sample-blog-post-translated](./assets/sample-blog-post-translated.png)
 
 ## Architecture
@@ -79,7 +80,9 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
  * `cdk docs`        open CDK documentation
 
 ## Test
+
 1. AWS 웹 콘솔에서 Lambda 서비스를 선택한 후, BlogRssReader 람다 함수를 선택 한다.
+![lambda-function-list](./assets/lambda-function-list.png)
 
 2. **Configure test events**를 선택한다.
 ![lambda-configure-test-events](./assets/lambda-configure-test-events.png)
