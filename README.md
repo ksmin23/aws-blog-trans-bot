@@ -4,7 +4,7 @@
 
   **Figure 1.** 영문 AWS의 최신 블로그 포스팅을 한국어로 번역한 결과
 
-  ![sample-blog-post-translated](./assets/sample-blog-post-translated.jpg)
+  ![sample-blog-post-translated](./assets/sample-blog-post-translated.png)
 
 ## Architecture
  ![aws-blog-trans-bot-arch](./assets/aws-blog-trans-bot-arch.svg)
