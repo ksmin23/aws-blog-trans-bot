@@ -96,9 +96,8 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
 ![lambda-run-test](./assets/lambda-run-test.png)
 
 ## AWS Blog Links
-
 | Category | Link |
-|------|---|---|
+|:------:|:---|
 |  Architecture | https://aws.amazon.com/blogs/architecture/ |
 |  AWS Cost Management | https://aws.amazon.com/blogs/aws-cost-management/ |
 |  AWS Partner Network | https://aws.amazon.com/blogs/apn/ |
