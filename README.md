@@ -101,7 +101,6 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
 |  Architecture | https://aws.amazon.com/blogs/architecture/ |
 |  AWS Cost Management | https://aws.amazon.com/blogs/aws-cost-management/ |
 |  AWS Partner Network | https://aws.amazon.com/blogs/apn/ |
-|  AWS Podcast | https://aws.amazon.com/podcasts/aws-podcast/?sc_ichannel=ha&sc_icampaign=acq_awsblognav&sc_icontent=categorynav |
 |  AWS Marketplace | https://aws.amazon.com/blogs/awsmarketplace/ |
 |  AWS News | https://aws.amazon.com/blogs/aws/ |
 |  Big Data | https://aws.amazon.com/blogs/big-data/ |
