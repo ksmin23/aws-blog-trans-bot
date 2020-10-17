@@ -1,4 +1,4 @@
-# RSS Feed Translation Bot
+# AWS Blog Post Translation Bot
 
 영문 [AWS의 최신 블로그 포스팅](https://aws.amazon.com/ko/blogs/aws/)을 한국어로 기계 번역해서 한국어 번역 내용(아래 그림 참조)을 email로 전송해주는 프로젝트.<br/>
 
