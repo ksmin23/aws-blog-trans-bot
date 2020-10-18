@@ -66,7 +66,8 @@ class AwsBlogTransBotStack(core.Stack):
 
     lambda_fn_env = {
       'DRY_RUN': self.node.try_get_context('dry_run'),
-      'BLOG_URL': self.node.try_get_context('blog_url'),
+      'BLOG_BASE_URL': self.node.try_get_context('blog_base_url'),
+      'BLOG_CATEGORIES': self.node.try_get_context('blog_categories'),
       'REGION_NAME': core.Aws.REGION,
       'SNS_TOPIC_ARN': sns_topic.topic_arn,
       'S3_BUCKET_NAME': s3_bucket.bucket_name,

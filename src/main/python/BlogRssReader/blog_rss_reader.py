@@ -35,9 +35,8 @@ AWS_SNS_TOPIC_ARN = os.getenv('SNS_TOPIC_ARN')
 S3_BUCKET_NAME = os.getenv('S3_BUCKET_NAME')
 S3_OBJ_KEY_PREFIX = os.getenv('S3_OBJ_KEY_PREFIX', 'posts')
 
-BLOG_URL = os.getenv('BLOG_URL', 'https://aws.amazon.com/ko/blogs/aws/')
-BLOG_CATEGORY = BLOG_URL.rstrip('/').split('/')[-1]
-
+BLOG_BASE_URL = os.getenv('BLOG_BASE_URL', 'https://aws.amazon.com/blogs')
+BLOG_CATEGORIES = os.getenv('BLOG_CATEGORIES')
 
 def isfile_s3(s3_client, s3_bucket_name, s3_obj_key):
   try:
@@ -67,38 +66,41 @@ def lambda_handler(event, context):
   LOGGER.info('send new blog post')
   counters = collections.OrderedDict({'total': 0, 'new': 0, 'error': 0})
 
-  res = requests.get(BLOG_URL)
-  html = res.text
-  soup = BeautifulSoup(html, 'html.parser')
-  footers = soup.find_all('footer', class_='blog-post-meta')
-
+  LinkData = collections.namedtuple('LinkData', ['category', 'props'])
   BASIC_DATE = arrow.get(event['time']).shift(days=-3).ceil('day')
 
-  post_list = [get_meta_data(elem) for elem in footers]
-  cand_post_list = [e for e in post_list if arrow.get(e['pub_date']) >= BASIC_DATE]
+  cand_post_list = []
+  for category in BLOG_CATEGORIES.split(','):
+    blog_url = '{base_url}/{path}'.format(base_url=BLOG_BASE_URL, path=category)
+    res = requests.get(blog_url)
+    html = res.text
+    soup = BeautifulSoup(html, 'html.parser')
+    footers = soup.find_all('footer', class_='blog-post-meta')
+
+    post_list = [LinkData(category, get_meta_data(elem)) for elem in footers]
+    cand_post_list.extend([e for e in post_list if arrow.get(e.props['pub_date']) >= BASIC_DATE])
+    counters['total'] += len(post_list)
 
   s3_client = boto3.client('s3', region_name=AWS_REGION)
   new_post_list = []
   for elem in cand_post_list:
     s3_obj_key = '{}/{}-{}.html'.format(S3_OBJ_KEY_PREFIX,
-      arrow.get(elem['pub_date']).format('YYYYMMDD'), elem['id'])
+      arrow.get(elem.props['pub_date']).format('YYYYMMDD'), elem.props['id'])
     if not isfile_s3(s3_client, S3_BUCKET_NAME, s3_obj_key):
       new_post_list.append(elem)
 
   sns_client = boto3.client('sns', region_name=AWS_REGION)
-  for elem in new_post_list:
+  for category, elem in new_post_list:
     try:
       if DRY_RUN:
-        print(json.dumps(elem))
+        print(category, json.dumps(elem))
         continue
-      send_sns(sns_client, AWS_SNS_TOPIC_ARN, BLOG_CATEGORY, json.dumps(elem))
+      send_sns(sns_client, AWS_SNS_TOPIC_ARN, category, json.dumps(elem))
     except Exception as ex:
-      traceback.print_stack()
+      traceback.print_exc()
       counters['error'] += 1
 
-  counters['total'] += len(post_list)
   counters['new'] += len(new_post_list)
-
   LOGGER.info('done: {}'.format(','.join(['{}={}'.format(k, v) for k, v in counters.items()])))
 
 
