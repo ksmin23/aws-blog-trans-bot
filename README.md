@@ -62,9 +62,9 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
       aws ses verify-email-identity --email-address sender@amazon.com
       ```
     - AWS Blog 중 다른 카테고리의 블로그 포스트를 번역하고 싶은 경우, `blog_categories`에 [category code](#aws-blog-category-codes)를 쉼표(`,`)로 구분해서 넣으면 된다. 예를 들어, AWS News Blog, AWS Big Data Blog, AWS Machine Learning Blog의 블로그 포스트를 번역하고 싶은 경우, "aws,big-data,machine-learning"을 `blog_categories`에 넣는다.
-    ```
-    {"blog_categories": "aws,big-data,machine-learning"}
-    ```
+      ```
+      {"blog_categories": "aws,big-data,machine-learning"}
+      ```
 
 5. `cdk deploy` 명령어를 이용해서 배포한다.
     ```shell script
