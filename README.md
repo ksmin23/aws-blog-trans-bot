@@ -35,11 +35,18 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
     ```shell script
     $ git clone https://github.com/ksmin23/aws-rss-feed-trans-bot.git
     $ cd aws-rss-feed-trans-bot
+    $ python3 --version
+    Python 3.6.9
     $ python3 -m venv .env
     $ source .env/bin/activate
     (.env) $ pip install -r requirements.txt
     (.env) $ ./build-aws-lambda-layer.sh lambda-layer-resources/var
     ```
+
+    :warning: **Python 3.7**을 사용할 경우, `./aws_blog_trans_bot/aws_blog_trans_bot_stack.py` 파일에서 `_lambda.Runtime.PYTHON_3_6` 를 `_lambda.Runtime.PYTHON_3_7` 로 변경해서, AWS Lambda Function과 Lambda Layer에서 **Python 3.7**를 Runtime으로 사용해야 한다.<br/>
+    Lambda Function과 Lambda Layer의 Python Runtime 버전이 일치하지 않는 경우, 다음과 같은 에러가 발생한다.</br>
+    ![blog-trans-bot-lambda-fn-error](./asset/../assets/blog-trans-bot-lambda-fn-error.png)
+
 
 4. `cdk.context.json` 파일을 열어서, `lib_bucket_name`에 Lambda Layer에 등록할 Python 패키지가 저장된 s3 bucket 이름을 적고,<br/>`email_from_address`과 `email_to_addresses`에 e-mail 발신자와 수신자들 목록을 각각 넣는다.<br/> RSS Feed를 읽는 주기를 변경하고자 하는 경우, `event_schedule`을 crontab 문법 처럼 등록 한다.<br/>
 `event_schedule` 기본 값은 매 시간 마다 RSS Feed를 읽어서 번역한다.
