@@ -44,7 +44,7 @@ Lambda Layer에 등록할 Python 패키지를 생성해서 s3에 저장한다.
     ```
 
     :warning: **Python 3.7**을 사용하는 경우, `./aws_blog_trans_bot/aws_blog_trans_bot_stack.py` 파일에서 `_lambda.Runtime.PYTHON_3_6` 를 `_lambda.Runtime.PYTHON_3_7` 로 변경해서, AWS Lambda Function과 Lambda Layer에서 **Python 3.7**를 Runtime으로 사용해야 한다.<br/>
-    Lambda Function과 Lambda Layer의 Python Runtime 버전이 동일하지 않는 경우, 다음과 같은 에러가 발생한다.</br>
+    Lambda Function과 Lambda Layer의 Python Runtime 버전이 동일하지 않는 경우, `BlogTransBot` 람다 함수 실행 될 때 다음과 같은 에러가 발생한다.</br>
     ![blog-trans-bot-lambda-fn-error](./asset/../assets/blog-trans-bot-lambda-fn-error.png)
 
 
