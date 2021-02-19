@@ -162,6 +162,16 @@ class AwsBlogTransBotStack(core.Stack):
       "actions": ["ses:SendEmail"]
     }))
 
+    translate_ro_policy = aws_iam.ManagedPolicy.from_managed_policy_arn(self,
+      'TranslateReadOnly',
+      'arn:aws:iam::aws:policy/TranslateReadOnly')
+    blog_trans_bot_lambda_fn.role.add_managed_policy(translate_ro_policy)
+
+    comprehend_ro_policy = aws_iam.ManagedPolicy.from_managed_policy_arn(self,
+      'ComprehendReadOnly',
+      'arn:aws:iam::aws:policy/ComprehendReadOnly')
+    blog_trans_bot_lambda_fn.role.add_managed_policy(comprehend_ro_policy)
+
     log_group = aws_logs.LogGroup(self, 'BlogTransBotLogGroup',
       log_group_name='/aws/lambda/BlogTransBot',
       retention=aws_logs.RetentionDays.THREE_DAYS)

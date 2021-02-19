@@ -12,7 +12,6 @@ import json
 import boto3
 import arrow
 from newspaper import Article
-from googletrans import Translator
 
 LOGGER = logging.getLogger()
 if len(LOGGER.handlers) > 0:
@@ -37,6 +36,8 @@ EMAIL_TO_ADDRESSES = [e.strip() for e in EMAIL_TO_ADDRESSES.split(',')]
 TRANS_DEST_LANG = os.getenv('TRANS_DEST_LANG', 'ko')
 
 MAX_SINGLE_TEXT_SIZE = 15*1204
+
+TRANS_CLIENT = None
 
 
 def fwrite_s3(s3_client, doc, s3_bucket, s3_obj_key):
@@ -146,19 +147,20 @@ def send_email(ses_client, from_addr, to_addrs, subject, html_body):
   return ret
 
 
-def mk_translator(dest='ko'):
-  for i in range(1, 7):
-    try:
-      translator = Translator()
-      _ = translator.translate('Hello', dest=dest)
-      return translator
-    except Exception as ex:
-      LOGGER.error(repr(ex))
-      wait_time = min(pow(2, i), 60)
-      LOGGER.info('retry to translate after %s sec' % wait_time)
-      time.sleep(wait_time)
-  else:
-    raise RuntimeError()
+def get_or_create_translator(region_name):
+  global TRANS_CLIENT
+
+  if not TRANS_CLIENT:
+    TRANS_CLIENT = boto3.client('translate', region_name=region_name)
+  assert TRANS_CLIENT
+  return TRANS_CLIENT
+
+
+def translate(translator, text, src='en', dest='ko'):
+  trans_res = translator.translate_text(Text=text,
+    SourceLanguageCode=src, TargetLanguageCode=dest)
+  trans_text = trans_res['TranslatedText'] if 200 == trans_res['ResponseMetadata']['HTTPStatusCode'] else None
+  return trans_text
 
 
 def lambda_handler(event, context):
@@ -187,20 +189,21 @@ def lambda_handler(event, context):
     #XX: https://py-googletrans.readthedocs.io/en/latest/
     assert len(body_text) < MAX_SINGLE_TEXT_SIZE
 
-    translator = mk_translator(dest=TRANS_DEST_LANG)
-    title_translated = translator.translate(title, dest=TRANS_DEST_LANG)
-    trans_title = title_translated.text
+    translator = get_or_create_translator(region_name=AWS_REGION)
+    trans_title = translate(translator, title, dest=TRANS_DEST_LANG)
 
     sentences = [e for e in body_text.split('\n') if e]
-    trans_sentences = translator.translate(sentences, dest=TRANS_DEST_LANG)
-    trans_body_texts = [e.text for e in trans_sentences]
+    trans_body_texts = []
+    for sentence in sentences:
+      trans_sentence = translate(translator, sentence, dest=TRANS_DEST_LANG)
+      trans_body_texts.append(trans_sentence)
 
     doc = {
       'doc_id': doc_id,
       'link': url,
       'lang': TRANS_DEST_LANG,
       'pub_date': published_time,
-      'section': section, 
+      'section': section,
       'title': title,
       'title_trans': trans_title,
       'body_trans': trans_body_texts,
@@ -208,12 +211,13 @@ def lambda_handler(event, context):
     }
     html = gen_html(doc)
 
-    subject = '''[translated] {title}'''.format(title=doc['title'])
-    send_email(ses_client, EMAIL_FROM_ADDRESS, EMAIL_TO_ADDRESSES, subject, html)
+    if not DRY_RUN:
+      subject = '''[translated] {title}'''.format(title=doc['title'])
+      send_email(ses_client, EMAIL_FROM_ADDRESS, EMAIL_TO_ADDRESSES, subject, html)
 
     s3_obj_key = '{}/{}-{}.html'.format(S3_OBJ_KEY_PREFIX,
       arrow.get(published_time).format('YYYYMMDD'), doc['doc_id'])
-    fwrite_s3(s3_client, html, S3_BUCKET_NAME, s3_obj_key) 
+    fwrite_s3(s3_client, html, S3_BUCKET_NAME, s3_obj_key)
   LOGGER.debug('done')
 
 
