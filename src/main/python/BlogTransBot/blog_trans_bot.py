@@ -146,6 +146,21 @@ def send_email(ses_client, from_addr, to_addrs, subject, html_body):
   return ret
 
 
+def mk_translator(dest='ko'):
+  for i in range(1, 7):
+    try:
+      translator = Translator()
+      _ = translator.translate('Hello', dest=dest)
+      return translator
+    except Exception as ex:
+      LOGGER.error(repr(ex))
+      wait_time = min(pow(2, i), 60)
+      LOGGER.info('retry to translate after %s sec' % wait_time)
+      time.sleep(wait_time)
+  else:
+    raise RuntimeError()
+
+
 def lambda_handler(event, context):
   LOGGER.debug('receive SNS message')
 
@@ -172,7 +187,7 @@ def lambda_handler(event, context):
     #XX: https://py-googletrans.readthedocs.io/en/latest/
     assert len(body_text) < MAX_SINGLE_TEXT_SIZE
 
-    translator = Translator()
+    translator = mk_translator(dest=TRANS_DEST_LANG)
     title_translated = translator.translate(title, dest=TRANS_DEST_LANG)
     trans_title = title_translated.text
 
