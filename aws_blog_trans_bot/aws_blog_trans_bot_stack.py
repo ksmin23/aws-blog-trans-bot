@@ -51,7 +51,7 @@ class AwsBlogTransBotStack(core.Stack):
     s3_lib_bucket_name = self.node.try_get_context('lib_bucket_name')
 
     #XXX: https://github.com/aws/aws-cdk/issues/1342
-    s3_lib_bucket = s3.Bucket.from_bucket_name(self, id, s3_lib_bucket_name)
+    s3_lib_bucket = s3.Bucket.from_bucket_name(self, "S3LibBucketName", s3_lib_bucket_name)
 
     lambda_lib_layer = _lambda.LayerVersion(self, "BlogTransBotLib",
       layer_version_name="blog_trans_bot-lib",

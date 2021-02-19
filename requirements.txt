@@ -1,12 +1,12 @@
-aws-cdk.core==1.67.0
-aws-cdk.aws-ec2==1.67.0
-aws-cdk.aws-events==1.67.0
-aws-cdk.aws-events-targets==1.67.0
-aws-cdk.aws-elasticache==1.67.0
-aws-cdk.aws-iam==1.67.0
-aws-cdk.aws-lambda==1.67.0
-aws-cdk.aws-logs==1.67.0
-aws-cdk.aws-s3==1.67.0
+aws-cdk.core==1.85.0
+aws-cdk.aws-ec2==1.85.0
+aws-cdk.aws-events==1.85.0
+aws-cdk.aws-events-targets==1.85.0
+aws-cdk.aws-elasticache==1.85.0
+aws-cdk.aws-iam==1.85.0
+aws-cdk.aws-lambda==1.85.0
+aws-cdk.aws-logs==1.85.0
+aws-cdk.aws-s3==1.85.0
 boto3==1.15.16
 botocore==1.18.16
 
