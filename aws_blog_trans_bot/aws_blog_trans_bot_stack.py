@@ -2,8 +2,10 @@
 # -*- encoding: utf-8 -*-
 # vim: tabstop=2 shiftwidth=2 softtabstop=2 expandtab
 
+import aws_cdk as cdk
+
 from aws_cdk import (
-  core,
+  Stack,
   aws_ec2,
   aws_iam,
   aws_s3 as s3,
@@ -11,16 +13,16 @@ from aws_cdk import (
   aws_logs,
   aws_events,
   aws_events_targets,
-  aws_elasticache,
   aws_sns,
   aws_sns_subscriptions as aws_sns_subs
 )
+from constructs import Construct
 
 
-class AwsBlogTransBotStack(core.Stack):
+class AwsBlogTransBotStack(Stack):
 
-  def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
-    super().__init__(scope, id, **kwargs)
+  def __init__(self, scope: Construct, construct_id: str, **kwargs) -> None:
+    super().__init__(scope, construct_id, **kwargs)
 
     # The code that defines your stack goes here
     vpc = aws_ec2.Vpc(self, 'BlogTransBotVPC',
@@ -33,12 +35,12 @@ class AwsBlogTransBotStack(core.Stack):
     )
 
     s3_bucket = s3.Bucket(self, 'TransBlogBucket',
-      bucket_name='aws-blog-{region}-{account}'.format(region=core.Aws.REGION,
-        account=core.Aws.ACCOUNT_ID))
+      bucket_name='aws-blog-{region}-{account}'.format(region=cdk.Aws.REGION,
+        account=cdk.Aws.ACCOUNT_ID))
 
     s3_bucket.add_lifecycle_rule(prefix='posts/', id='posts',
-      abort_incomplete_multipart_upload_after=core.Duration.days(3),
-      expiration=core.Duration.days(7))
+      abort_incomplete_multipart_upload_after=cdk.Duration.days(3),
+      expiration=cdk.Duration.days(7))
 
     sg_rss_feed_trans_bot = aws_ec2.SecurityGroup(self, 'BlogTransBotSG',
       vpc=vpc,
@@ -46,7 +48,7 @@ class AwsBlogTransBotStack(core.Stack):
       description='security group for blog post trans bot',
       security_group_name='blog-trans-bot'
     )
-    core.Tags.of(sg_rss_feed_trans_bot).add('Name', 'blog-trans-bot')
+    cdk.Tags.of(sg_rss_feed_trans_bot).add('Name', 'blog-trans-bot')
 
     s3_lib_bucket_name = self.node.try_get_context('lib_bucket_name')
 
@@ -68,7 +70,7 @@ class AwsBlogTransBotStack(core.Stack):
       'DRY_RUN': self.node.try_get_context('dry_run'),
       'BLOG_BASE_URL': self.node.try_get_context('blog_base_url'),
       'BLOG_CATEGORIES': self.node.try_get_context('blog_categories'),
-      'REGION_NAME': core.Aws.REGION,
+      'REGION_NAME': cdk.Aws.REGION,
       'SNS_TOPIC_ARN': sns_topic.topic_arn,
       'S3_BUCKET_NAME': s3_bucket.bucket_name,
       'S3_OBJ_KEY_PREFIX': 'posts'
@@ -80,9 +82,9 @@ class AwsBlogTransBotStack(core.Stack):
       function_name='BlogRssReader',
       handler='blog_rss_reader.lambda_handler',
       description='Crawl blog rss feed',
-      code=_lambda.Code.asset('./src/main/python/BlogRssReader'),
+      code=_lambda.Code.from_asset('./src/main/python/BlogRssReader'),
       environment=lambda_fn_env,
-      timeout=core.Duration.minutes(15),
+      timeout=cdk.Duration.minutes(15),
       layers=[lambda_lib_layer],
       security_groups=[sg_rss_feed_trans_bot],
       vpc=vpc
@@ -120,7 +122,7 @@ class AwsBlogTransBotStack(core.Stack):
     log_group.grant_write(blog_rss_reader_lambda_fn)
 
     lambda_fn_env = {
-      'REGION_NAME': core.Aws.REGION,
+      'REGION_NAME': cdk.Aws.REGION,
       'S3_BUCKET_NAME': s3_bucket.bucket_name,
       'S3_OBJ_KEY_PREFIX': 'posts',
       'EMAIL_FROM_ADDRESS': self.node.try_get_context('email_from_address'),
@@ -137,9 +139,9 @@ class AwsBlogTransBotStack(core.Stack):
       function_name='BlogTransBot',
       handler='blog_trans_bot.lambda_handler',
       description='Translate blog post',
-      code=_lambda.Code.asset('./src/main/python/BlogTransBot'),
+      code=_lambda.Code.from_asset('./src/main/python/BlogTransBot'),
       environment=lambda_fn_env,
-      timeout=core.Duration.minutes(15),
+      timeout=cdk.Duration.minutes(15),
       layers=[lambda_lib_layer],
       security_groups=[sg_rss_feed_trans_bot],
       vpc=vpc

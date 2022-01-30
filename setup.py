@@ -19,7 +19,8 @@ setuptools.setup(
     packages=setuptools.find_packages(where="aws_blog_trans_bot"),
 
     install_requires=[
-        "aws-cdk.core==1.67.0",
+        "aws-cdk-lib",
+        "constructs",
     ],
 
     python_requires=">=3.6",
